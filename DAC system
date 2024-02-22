@@ -1,0 +1,291 @@
+import pyomo.environ as pe
+import pandas as pd
+import numpy as np
+import random as rand
+import matplotlib.pyplot as pt
+
+sc_numb = 
+Year_Demand = 0
+CO2_total= *sc_numb * 364 / 365
+
+min_W = 
+min_HP=
+DAC_discount=
+
+# Read weather data from local excel file
+Renewable_Source =pd.read_excel(r".xlsx" )
+RS = pd.DataFrame(Renewable_Source)
+Solar_CF = RS['CF']
+Ws = RS['Ws']
+Wind_CF = np.zeros(8760 * )
+for i in range(8760 * ):
+    ws = Ws[i]
+    cf = 0
+    if ws < 3:
+        cf = 0
+    elif ws > 25:
+        cf = 0
+    elif 3 <= ws <= 11.4:
+        cf = 6.578 * 1e-4 * ws ** 3 - 0.0185706
+    else:
+        cf = 1
+    Wind_CF[i] = cf
+
+WF = np.zeros((8736, sc_numb))
+SF = np.zeros((8736, sc_numb))
+
+for i in range(sc_numb):
+    coin_1 = int(i % )
+    coin_2 = int(int(i / ) %  )
+    # coin_1=i
+    # coin_2=2-i
+    for j in range(8736):
+        WF[j][i] = Wind_CF[coin_1 * 8760 + j]
+        SF[j][i] = Solar_CF[coin_2 * 8760 + j]
+
+HD = pd.DataFrame(Demand_Source)
+H_demand = np.zeros((52 , sc_numb))
+for i in range(sc_numb):
+    for j in range(52):
+        H_demand[j, i] = Year_Demand/52 * 364/365
+
+Ti = np.arange(8736)
+Wi=np.arange(52)
+Sc = np.arange(sc_numb)
+
+model = pe.ConcreteModel()
+model.XB=pe.Var(bounds=(0,1e6))
+#model.XT = pe.Var(within=pe.NonNegativeIntegers, bounds=(0, 1e6 ))
+model.XT=pe.Var(bounds=(0, 1e6))
+T_module = 
+#model.XP = pe.Var(within=pe.NonNegativeIntegers, bounds=(1, 1e6))
+model.XP=pe.Var(bounds=(0,1e6))
+model.XW = pe.Var(bounds=(0,0))
+model.XFC = pe.Var(bounds=(0,0))
+model.XHt = pe.Var(bounds=(0, 0))
+model.XDAC=pe.Var(bounds=(0, 1e6))
+model.XHP=pe.Var(bounds=(0, 1e6))
+model.XTES=pe.Var(bounds=(0, 1e6))
+
+module_size = 
+W_size = 
+IC_T = 
+IC_P =
+IC_B =
+IC_W =
+IC_Ht =
+IC_DAC=  * DAC_discount
+IC_HP=
+HP_eff=
+IC_TES = 
+TES_eff=
+IC_FC = 
+FC_eff=
+B_eff = 
+T_eff = 
+P_eff = 
+W_eff = 
+
+model.ESS = pe.Var(Ti, Sc, bounds=(0, None))
+model.ch = pe.Var(Ti, Sc, bounds=(0, None))
+model.dch = pe.Var(Ti, Sc, bounds=(0, None))
+
+model.YHt = pe.Var(Ti, Sc, bounds=(0, None))
+#model.Hch = pe.Var(Ti, Sc, bounds=(0, None))
+#model.Hdch = pe.Var(Ti, Sc, bounds=(0, None))
+
+model.YTES = pe.Var(Ti, Sc, bounds=(0, None))
+#model.YHP = pe.Var(Ti, Sc,within=pe.Binary)
+model.Tch = pe.Var(Ti, Sc, bounds=(0, None))
+model.Tdch = pe.Var(Ti, Sc, bounds=(0, None))
+
+model.out = pe.Var(Ti, Sc, bounds=(0, None))
+model.p2x = pe.Var(Ti, Sc, bounds=(0, None))
+model.x2p = pe.Var(Ti, Sc, bounds=(0, None))
+
+model.dac1 = pe.Var(Ti, Sc, bounds=(0, None))
+e1=0.07*2
+model.dac2 = pe.Var(Ti, Sc, bounds=(0, None))
+model.dac3 = pe.Var(Ti, Sc, bounds=(0, None))
+e3=*2
+h3=*2
+model.dac4 = pe.Var(Ti, Sc, bounds=(0, None))
+model.p2t = pe.Var(Ti, Sc, bounds=(0, None))
+
+
+# def obj_rule(model):
+model.obj = pe.Objective(expr=(
+                        (0.025 + 0.12950) * model.XB  * IC_B +
+                        (0.024+0.06505) * IC_T * model.XT * T_module +
+                        ( + ) * IC_W * model.XW   +
+                        (0.02+0.06107) * model.XP * IC_P +
+                        ( + ) * model.XHt * IC_Ht +
+                        ( + ) * model.XFC * IC_FC +
+                        ( + ) * model.XDAC * IC_DAC+
+                        ( + ) * model.XHP * IC_HP +
+                        ( + ) * model.XTES * IC_TES)
+                        , sense=pe.minimize)
+
+# Energy balance
+def con_rule_FC(model,t,sc):
+    return model.x2p[t,sc]<=model.XFC
+model.con_FC = pe.Constraint(Ti, Sc, rule=con_rule_FC)
+
+def con_rule_DAC(model,t,sc):
+    return model.XDAC == model.dac1[t,sc]+model.dac2[t,sc]+model.dac3[t,sc]+model.dac4[t,sc]
+model.con_rule_DAC = pe.Constraint(Ti,Sc,rule=con_rule_DAC)
+
+def con_rule_DAC1(model,t,sc):
+    if t == 8735:
+        return pe.Constraint.Skip
+    else:
+        return model.dac1[t + 1, sc] <= model.dac3[t,sc] + model.dac4[t,sc]
+model.con_rule_DAC1 = pe.Constraint(Ti,Sc,rule=con_rule_DAC1)
+
+def con_rule_DAC2(model,t,sc):
+    if t == 8735:
+        return pe.Constraint.Skip       
+    else:
+        return model.dac3[t + 1, sc] <= model.dac1[t,sc] + model.dac2[t,sc]
+model.con_rule_DAC2 = pe.Constraint(Ti,Sc,rule=con_rule_DAC2)
+
+def con_rule_DAC3(model,t,sc):
+    if t == 8735:
+        return pe.Constraint.Skip        
+    else:
+        return model.dac2[t + 1, sc] == model.dac1[t , sc] + model.dac2[t,sc]-model.dac3[t+1,sc]
+model.con_rule_DAC3 = pe.Constraint(Ti,Sc,rule=con_rule_DAC3)
+
+def con_rule_DAC4(model,t,sc):
+    if t == 8735:
+        return pe.Constraint.Skip
+        # return 1000*model.Nb*model.SOC[t+1] == 1000*model.Nb*model.SOC[t]+0.9*model.ch[t] - model.dch[t]/0.9
+    else:
+        return model.dac4[t + 1, sc] == model.dac3[t , sc] + model.dac4[t,sc]-model.dac1[t+1,sc]
+model.con_rule_DAC4 = pe.Constraint(Ti,Sc,rule=con_rule_DAC4)
+
+def con1_rule(model, t, sc):
+    return WF[t][sc] * model.XT * T_eff * T_module + SF[t][sc] * model.XP * P_eff + model.dch[t, sc] - model.ch[
+        t, sc] - model.out[t, sc] - model.p2x[t, sc] - (model.dac1[t,sc]*e1+model.dac3[t,sc]*e3) - model.p2t[t,sc] + *model.x2p[t,sc]== 0
+model.con1 = pe.Constraint(Ti, Sc, rule=con1_rule)
+
+
+# End effect of battery, Hs tank, Hk tank considering lead time
+model.end_effect = pe.ConstraintList()
+for sc in Sc:
+    model.end_effect.add(
+        expr= * model.ESS[8735, sc] + B_eff * model.ch[8735, sc] - model.dch[8735, sc] / B_eff >= model.ESS[
+            0, sc])
+    model.end_effect.add(
+        expr= * model.YHt[8735, sc] + W_eff*model.p2x[8735,sc]  - 1/FC_eff*model.x2p[8735,sc]  >=model.YHt[0, sc])
+    model.end_effect.add(
+        expr= * model.YTES[8735, sc] + TES_eff * model.Tch[8735, sc] - model.Tdch[8735, sc] / TES_eff >= model.YTES[
+            0, sc])
+    model.end_effect.add(
+        expr=model.dac3[0,sc] <= model.dac1[8735,sc] + model.dac2[8735,sc])
+    model.end_effect.add(
+        expr=model.dac1[0, sc] <= model.dac3[8735, sc] + model.dac4[8735, sc])
+    model.end_effect.add(
+        expr=model.dac2[0, sc] == model.dac1[8735, sc] + model.dac2[8735, sc] - model.dac3[0,sc])
+    model.end_effect.add(
+        expr=model.dac4[0, sc] == model.dac4[8735, sc] + model.dac3[8735, sc] - model.dac1[0,sc])
+
+
+
+
+
+# Component balance equation (ESS, Hs tank, Hk tank) considering lead time
+def con_rule(model, t, sc):
+    if t == 8735:
+        return pe.Constraint.Skip
+    else:
+        return model.ESS[t + 1, sc] ==  * model.ESS[t, sc] + B_eff * model.ch[t, sc] - model.dch[t, sc] / B_eff
+model.con = pe.Constraint(Ti, Sc, rule=con_rule)
+
+
+def con_rule_He(model, t, sc):
+    if t==8735:
+        return pe.Constraint.Skip
+    elif t % 168 == 0:
+        return pe.Constraint.Skip
+    else:
+        return model.YHt[t + 1, sc] ==  * model.YHt[t, sc] + model.p2x[t,sc]*W_eff - 1/FC_eff*model.x2p[t,sc]
+model.con_He = pe.Constraint(Ti, Sc, rule=con_rule_He)
+
+def con_rule_Te(model, t, sc):
+    if t == 8735:
+        return pe.Constraint.Skip
+    else:
+        return model.YTES[t + 1, sc] ==  * model.YTES[t, sc] + TES_eff * model.Tch[t, sc] - model.Tdch[t, sc] / TES_eff
+model.con_Te = pe.Constraint(Ti, Sc, rule=con_rule_Te)
+
+
+def con_rule_aHB(model, t, sc):
+    return model.dac3[t,sc]*h3 ==  model.p2t[t,sc]*HP_eff - model.Tch[t,sc] + model.Tdch[t,sc]
+model.conaHB = pe.Constraint(Ti, Sc, rule=con_rule_aHB)
+
+
+
+# operating boundary constraint
+def con7_rule(model, t, sc):
+    return model.dch[t, sc] <=  * model.XB
+model.con7 = pe.Constraint(Ti, Sc, rule=con7_rule)
+
+
+def con8_rule(model, t, sc):
+    return model.ch[t, sc] <=  * model.XB
+model.con8 = pe.Constraint(Ti, Sc, rule=con8_rule)
+
+def con9_rule(model, t, sc):
+    return model.p2x[t, sc] <= model.XW
+model.con9 = pe.Constraint(Ti, Sc, rule=con9_rule)
+
+def con10_rule(model, t, sc):
+    return min_W * model.XW  <= model.p2x[t, sc]
+model.con10 = pe.Constraint(Ti, Sc, rule=con10_rule)
+
+def con11_rule(model, t, sc):
+    return model.ESS[t, sc] <= model.XB * 
+model.con11 = pe.Constraint(Ti, Sc, rule=con11_rule)
+
+def con12_rule(model, t, sc):
+    return model.XB *   <= model.ESS[t, sc]
+model.con12 = pe.Constraint(Ti, Sc, rule=con12_rule)
+
+def con24_rule(model, wi, sc):
+    return model.YHt[168*wi+1,sc] ==  * model.YHt[168*wi,sc] + model.p2x[168*wi,sc] * W_eff - H_demand[wi,sc]
+model.con24 = pe.Constraint(Wi, Sc, rule=con24_rule)
+
+def con41_rule(model,t,sc):
+    return model.Tdch[t, sc] <= model.XTES*
+model.con41 = pe.Constraint(Ti, Sc, rule=con41_rule)
+
+def con42_rule(model,t,sc):
+    return model.Tch[t, sc] <= model.XTES*
+model.con42 = pe.Constraint(Ti, Sc, rule=con42_rule)
+
+def con33_rule(model, t, sc):
+    return model.YHt[t, sc] <= model.XHt
+model.con33 = pe.Constraint(Ti, Sc, rule=con33_rule)
+
+def con43_rule(model, t, sc):
+    return model.YTES[t, sc] <= model.XTES*
+model.con43 = pe.Constraint(Ti, Sc, rule=con43_rule)
+
+def con52_rule(model, t, sc):
+    return model.p2t[t, sc] <= model.XHP
+model.con52 = pe.Constraint(Ti, Sc, rule=con52_rule)
+
+def con53_rule(model, t, sc):
+    return model.XHP * min_HP  <= model.p2t[t, sc]
+model.con53 = pe.Constraint(Ti, Sc, rule=con53_rule)
+
+model.con61 = pe.Constraint(expr=  sum(model.dac3[t, sc]*2 for t in Ti for sc in Sc) >= CO2_total)
+
+# IBM CPLEX solver is ussed to solving this problem
+solver = pe.SolverFactory('cplex', executetable=r'local path\CP Optimizer Interactive.exe')
+
+solver.options['mipgap'] = 
+solver.options['timelimit'] = 
+solver.solve(model, tee=True)
+
