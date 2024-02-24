@@ -4,27 +4,28 @@ import numpy as np
 import random as rand
 import matplotlib.pyplot as pt
 
-sc_numb = 9
-Year_Demand = 10000*1
-CO2_total=1000000*sc_numb*1 * 364/365  * 0
+sc_numb = 
+Year_Demand = 
+CO2_total=*sc_numb * 364/365  * 0
 
 min_W = 
 
 # weather data from local excel file
-Renewable_Source =pd.read_excel(r"C:\Users\User\Desktop\세번째 논문 H SCM\CF_Ws_Near_Neom_total.xlsx" )
+Renewable_Source =pd.read_excel("path\file_name.xlsx" )
 RS = pd.DataFrame(Renewable_Source)
+
 Solar_CF = RS['CF']
 Ws = RS['Ws']
 Wind_CF = np.zeros(8760 * 3)
 for i in range(8760 * 3):
     ws = Ws[i]
     cf = 0
-    if ws < 3:
+    if ws < :
         cf = 0
-    elif ws > 25:
+    elif ws > :
         cf = 0
-    elif 3 <= ws <= 11.4:
-        cf = 6.578 * 1e-4 * ws ** 3 - 0.0185706
+    elif  <= ws <= :
+        cf =  *  ws **  - 
     else:
         cf = 1
     Wind_CF[i] = cf
@@ -33,10 +34,8 @@ WF = np.zeros((8736, sc_numb))
 SF = np.zeros((8736, sc_numb))
 
 for i in range(sc_numb):
-    coin_1 = int(i % 3)
-    coin_2 = int(int(i / 3) % 3)
-    # coin_1=i
-    # coin_2=2-i
+    coin_1 = int(i % )
+    coin_2 = int(int(i / ) % )
     for j in range(8736):
         WF[j][i] = Wind_CF[coin_1 * 8760 + j]
         SF[j][i] = Solar_CF[coin_2 * 8760 + j]
