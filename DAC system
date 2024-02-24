@@ -253,7 +253,7 @@ def con12_rule(model, t, sc):
 model.con12 = pe.Constraint(Ti, Sc, rule=con12_rule)
 
 def con24_rule(model, wi, sc):
-    return model.YHt[168*wi+1,sc] ==  * model.YHt[168*wi,sc] + model.p2x[168*wi,sc] * W_eff - H_demand[wi,sc]
+    return model.YHt[168*wi+1,sc] ==  * model.YHt[168*wi,sc] + model.p2x[168*wi,sc] * W_eff - H_demand[wi,sc] - *model.x2p[168*wi,sc]
 model.con24 = pe.Constraint(Wi, Sc, rule=con24_rule)
 
 def con41_rule(model,t,sc):
