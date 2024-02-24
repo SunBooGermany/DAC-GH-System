@@ -16,16 +16,16 @@ RS = pd.DataFrame(Renewable_Source)
 
 Solar_CF = RS['CF']
 Ws = RS['Ws']
-Wind_CF = np.zeros(8760 * 3)
-for i in range(8760 * 3):
+Wind_CF = np.zeros(8760 * )
+for i in range(8760 * ):
     ws = Ws[i]
     cf = 0
-    if ws < :
+    if ws < 3:
         cf = 0
-    elif ws > :
+    elif ws > 25:
         cf = 0
-    elif  <= ws <= :
-        cf =  *  ws **  - 
+    elif 3 <= ws <= 11.4:
+        cf = 6.578 * 1e-4 * ws ** 3 - 0.0185706
     else:
         cf = 1
     Wind_CF[i] = cf
