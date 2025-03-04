@@ -1,3 +1,6 @@
 # DAC-GH-System
+Please see the detailed description in the below file:
+DAC-GH sector coupled system (AC-DC hybrid configuration, base case)
 
-The detail parameter value and the description of the equations & variables will be updated after acceptance.
+The weather uncertainty scenarios are summarized in three Excel files.
+Neom, Bundaberg, and Antofagasta 
