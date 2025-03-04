@@ -5,16 +5,7 @@ import random as rand
 import matplotlib.pyplot as pt
 
 sc_numb = 3
-# 2030 total H demand
-# Year_Demand=1.94*1000000
-# 2040 total H demand
-# Year_Demand=5.26*1000000
-# 2030 blue + green H demand
-# Year_Demand=0.85*1000000
-# 2040 blue + green H demand
-# Year_Demand=3.48*1000000
 Year_Demand = 10000 * 1
-# CO2_total=1000000*sc_numb*1
 
 P = False
 min_HP = 0.4
@@ -23,56 +14,8 @@ DAC_discount = 417/237 * 1.0
 e_factor = 250/210
 h_factor = 1072/1286
 H_const = True
-# First com Export
-#Renewable_Source =pd.read_excel(r"C:\Users\User\Desktop\세번째 논문 H SCM\CF_Ws_Near_Neom_total.xlsx" )
-# Renewable_Source =pd.read_excel(r"C:\Users\User\Desktop\세번째 논문 H SCM\CF_Ws_Near_Aust.xlsx" )
-#Renewable_Source = pd.read_excel(r"C:\Users\User\Desktop\세번째 논문 H SCM\CF_Ws_Near_Chile.xlsx")
 
-# First com Import
-#Demand_Source = pd.read_csv(r"C:\Users\User\Desktop\세번째 논문 H SCM\Korea_demand_G.csv")
-# Demand_Source =pd.read_csv(r"C:\Users\User\Desktop\세번째 논문 H SCM\Europe_demand_G.csv" )
-# Demand_Source =pd.read_csv(r"C:\Users\User\Desktop\세번째 논문 H SCM\USA_demand_G.csv" )
-
-# Second com Export
-# Renewable_Source = pd.read_excel(r"\Users\coms\Desktop\data\CF_Ws_Near_Neom_total.xlsx" ,engine='openpyxl')
-# Renewable_Source = pd.read_excel(r"C:\Users\coms\Desktop\data\CF_Ws_Near_Aust.xlsx" ,engine='openpyxl')
-# Renewable_Source = pd.read_excel(r"C:\Users\coms\Desktop\data\CF_Ws_Near_Chile.xlsx" ,engine='openpyxl')
-
-# Second com Import
-# Demand_Source= pd.read_csv(r"\Users\coms\Desktop\data\Korea_demand_G.csv" )
-# Demand_Source = pd.read_csv(r"C:\Users\coms\Desktop\data\Europe_demand_G.csv" )
-# Demand_Source = pd.read_csv(r"C:\Users\coms\Desktop\data\USA_demand_G.csv" )
-
-
-# Third com Export
-# Renewable_Source = pd.read_excel(r"C:\Users\User\Desktop\data\CF_Ws_Near_Neom_total.xlsx", engine='openpyxl')
-# Renewable_Source = pd.read_excel(r"C:\Users\User\Desktop\data\CF_Ws_Near_Aust.xlsx" ,engine='openpyxl')
-# Renewable_Source = pd.read_excel(r"C:\Users\User\Desktop\data\CF_Ws_Near_Chile.xlsx" ,engine='openpyxl')
-
-# Third com Import
-# Demand_Source = pd.read_csv(r"C:\Users\User\Desktop\data\Korea_demand_G.csv" )
-# Demand_Source = pd.read_csv(r"C:\Users\User\Desktop\data\Europe_demand_G.csv" )
-# Demand_Source = pd.read_csv(r"C:\Users\User\Desktop\data\USA_demand_G.csv")
-
-# USA com Export
-#Renewable_Source = pd.read_excel(r"C:\Users\glory\OneDrive\바탕화~1-LAPTOP-Q1E1LOI1-34370666\data\CF_Ws_Near_Neom_total.xlsx", engine='openpyxl')
-#Renewable_Source = pd.read_excel(r"C:\Users\glory\OneDrive\바탕화~1-LAPTOP-Q1E1LOI1-34370666\data\CF_Ws_Near_Aust.xlsx" ,engine='openpyxl')
-Renewable_Source = pd.read_excel(r"C:\Users\glory\OneDrive\바탕화~1-LAPTOP-Q1E1LOI1-34370666\data\CF_Ws_Near_Chile.xlsx" ,engine='openpyxl')
-
-# USA com Import
-# Demand_Source = pd.read_csv(r"C:\Users\glory\OneDrive\바탕화~1-LAPTOP-Q1E1LOI1-34370666\data\Korea_demand_G.csv" )
-# Demand_Source = pd.read_csv(r"C:\Users\glory\OneDrive\바탕화~1-LAPTOP-Q1E1LOI1-34370666\data\Europe_demand_G.csv" )
-# Demand_Source = pd.read_csv(r"C:\Users\glory\OneDrive\바탕화~1-LAPTOP-Q1E1LOI1-34370666\data\USA_demand_G.csv")
-
-# USA second com Export
-Renewable_Source = pd.read_excel(r"C:\Users\glory\Desktop\data\CF_Ws_Near_Neom_total.xlsx", engine='openpyxl')
-#Renewable_Source = pd.read_excel(r"C:\Users\glory\Desktop\data\CF_Ws_Near_Aust.xlsx" ,engine='openpyxl')
-#Renewable_Source = pd.read_excel(r"C:\Users\glory\Desktop\data\CF_Ws_Near_Chile.xlsx" ,engine='openpyxl')
-
-# USA second com Import
-Demand_Source = pd.read_csv(r"C:\Users\glory\Desktop\data\Korea_demand_G.csv" )
-#Demand_Source = pd.read_csv(r"C:\Users\glory\Desktop\data\Europe_demand_G.csv" )
-#Demand_Source = pd.read_csv(r"C:\Users\glory\Desktop\data\USA_demand_G.csv")
+Renewable_Source =pd.read_excel(r"\CF_Ws_Near_Neom_total.xlsx" )
 
 RS = pd.DataFrame(Renewable_Source)
 Solar_CF = RS['CF']
@@ -104,24 +47,6 @@ for i in range(sc_numb):
         # SF[j][i] = Solar_CF[coin_1 * 8760 + j]
         SF[j][i] = Solar_CF[coin_2 * 8760 + j]
 
-"""
-for i in range(sc_numb):
-    coin_1=rand.sample([0,1,2],1)[0]
-    coin_2=rand.sample([0,1,2],1)[0]
-    #coin_1=i
-    #coin_2=2-i
-    for j in range(8760):
-        WF[j][i]=Wind_CF[coin_1*8760+j]
-        SF[j][i]=Solar_CF[coin_2*8760+j]
-H_demand=np.zeros((52+LT,sc_numb))
-
-for i in range(sc_numb):
-    for j in range(8760):
-        WF[j][i]=Wind_CF.mean()
-        SF[j][i]=Solar_CF.mean()
-
-"""
-
 H_demand = np.zeros((8760, sc_numb))
 # HD = pd.DataFrame(Demand_Source)
 if H_const == True:
@@ -129,91 +54,7 @@ if H_const == True:
         for j in range(8760):
             H_demand[j, i] = Year_Demand / 8760
 
-"""
-#H_demand constant
-HD = pd.DataFrame(Demand_Source)
-H_demand = np.zeros((52 , sc_numb))
-for i in range(sc_numb):
-    for j in range(52):
-        H_demand[j, i] = Year_Demand/52 * 364/365
 
-#H_demand seasonality
-HD = pd.DataFrame(Demand_Source)
-H_demand = np.zeros((52 , sc_numb))
-for i in range(sc_numb):
-    for j in range(52):
-        H_demand[j, i] = HD.at[j, f'{i}']
-
-
-H_total1 = np.zeros(sc_numb)
-for i in range(sc_numb):
-    for j in range(52 ):
-        H_total1[i] = H_total1[i] + H_demand[j, i]
-for i in range(sc_numb):
-    for j in range(52 ):
-        H_demand[j, i] = H_demand[j, i] * Year_Demand / H_total1[i] * 364 / 365
-"""
-
-"""
-Average_demand=[0.0942 ,0.0858,	0.0843,	0.0747,	0.0772,	0.0806,	0.0861,	0.0861,	0.0783,	0.0792,	0.0824,	0.0912]
-STDEV_demand=[0.00260,0.00361,	0.00113,0.00402,0.00322,0.00210,0.00063,0.00112,0.00074,0.00131,0.00086,0.00222]
-for i in range(sc_numb):
-    for j in range(4):
-        for k in range(3):
-            if k==2:
-                for m in range(5):
-                    coin = float(np.random.normal(0, 1, 1))
-                    if coin>5:
-                        coin=5
-                    elif coin<-5:
-                        coin=-5
-                    else:
-                        coin=coin
-                    H_demand[j*13+8+m][i] = (Average_demand[k + 3 * j] / 4.333 + coin * STDEV_demand[k + 3 * j]/2.07)*Year_Demand
-            elif k==1:
-                for m in range(4):
-                    coin = float(np.random.normal(0, 1, 1))
-                    if coin > 5:
-                        coin = 5
-                    elif coin < -5:
-                        coin = -5
-                    else:
-                        coin = coin
-                    H_demand[j * 13 + 4 + m][ i] = (Average_demand[k + 3 * j] / 4.333 + coin * STDEV_demand[k + 3 * j]/2.07)*Year_Demand
-            else:
-                for m in range(4):
-                    coin = float(np.random.normal(0, 1, 1))
-                    if coin > 5:
-                        coin = 5
-                    elif coin < -5:
-                        coin = -5
-                    else:
-                        coin = coin
-                    H_demand[j * 13 + m][ i] = (Average_demand[k + 3 * j] / 4.333 + coin * STDEV_demand[k + 3 * j]/2.07)*Year_Demand
-H_total1=0
-for i in range(sc_numb):
-    for j in range(52+LT):
-        H_total1 = H_total1 + H_demand[j, i] / sc_numb
-for i in range(sc_numb):
-    for j in range(52+LT):
-        H_demand[j, i] = H_demand[j, i] * Year_Demand / H_total1
-#print(H_demand)
-for i in range(LT):
-    H_demand[i+52]=H_demand[i]
-    H_demand[i]=0
-
-for i in range(sc_numb):
-    for j in range(52+LT):
-        H_demand[j, i] = Year_Demand*364/365/52
-#print(H_demand)
-for i in range(LT):
-    H_demand[i+52]=H_demand[i]
-    H_demand[i]=0    
-"""
-
-# print(H_demand)
-# print(WF)
-# print(SF)
 
 Ti = np.arange(8760)
 Wi = np.arange(52)
@@ -251,15 +92,7 @@ B_eff = 0.95 * 0.95
 T_eff = 0.98
 P_eff = 0.95
 W_eff = 1 / 48 * 0.95
-"""
 
-#Neom seasonal
-num=[0.1,0.2,0.3,0.4,0.5,0.6, 0.7,1.0]
-Tl1=[26,28,32,35,37,40,44,54]
-Tl2=[27,29,32,35,37,41,44,54]
-"""
-# Neom
-# num = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 1.0]
 num = [0.1, 0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1]
 number = 8
 NT=np.zeros((number,1))
@@ -537,15 +370,7 @@ for k in range(number):
 
 
     model.con41 = pe.Constraint(Ti, Sc, rule=con41_rule)
-    """
-    def con32_rule(model, t, sc):
-        return model.Hch[t, sc] <= model.XHt
-    model.con32 = pe.Constraint(Ti, Sc, rule=con32_rule)
-    def con36_rule(model, t, sc):
-        return model.Hch[t, sc] <= model.p2x[t,sc]*W_eff
-
-    model.con36 = pe.Constraint(Ti, Sc, rule=con36_rule)
-    """
+    
 
 
     def con42_rule(model, t, sc):
@@ -567,13 +392,6 @@ for k in range(number):
 
 
     model.con43 = pe.Constraint(Ti, Sc, rule=con43_rule)
-    """
-    def con51_rule(model, t, sc):
-        return model.p2c[t, sc] <= model.XDAC
-
-
-    model.con51 = pe.Constraint(Ti, Sc, rule=con51_rule)
-    """
 
 
     def con52_rule(model, t, sc):
@@ -599,15 +417,7 @@ for k in range(number):
     # First com
     solver = pe.SolverFactory('cplex',
                               executetable=r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\CPLEX Optimization Studio 22.1.0\CP Optimizer Interactive.exe')
-    # Second com
-    # solver = pe.SolverFactory('cplex', executetable=r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\CPLEX Optimization Studio 22.1.1\CP Optimizer Interactive.exe')
-
-    # Third com
-    # solver = pe.SolverFactory('cplex',  executetable=r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\CPLEX Optimization Studio Community Edition 22.1.1\CP Optimizer Interactive.exe')
-
-    # USA com
-    # solver = pe.SolverFactory('cplex',executetable=r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\CPLEX Optimization Studio 22.1.1\CP Optimizer Interactive.exe')
-
+    
     solver.options['mipgap'] = 0.0001
     solver.options['timelimit'] = 3600 * 6
     result = solver.solve(model, tee=False)
@@ -626,74 +436,4 @@ for k in range(number):
     curtail[k] = sum(model.out[t, sc]() for t in Ti for sc in Sc) / sum(
         WF[t][sc] * model.XT() * T_eff * T_module + SF[t][sc] * model.XP() * P_eff for sc in Sc for t in Ti)
 
-    #e1 = sum(model.NGCC[t, sc]() for t in Ti for sc in Sc) / sc_numb
-    #e3 = sum(model.ESS[t, sc]() * (1 - 0.999917) for t in Ti for sc in Sc) / sc_numb
-    #e4 = total_e - e1 + e3
-
-    #A14[k] = e1 / (total_e + e3)
-    #A15[k] = sum(model.NGCC[t, sc]() * 7.15 * 365 / 364 for t in Ti for sc in Sc) / 1e6 / sc_numb
-    #A16[k] = model.XA()
-    print('number', num[k], 'total cost', model.obj())
-
-
-# pt.subplots((2,2),Wi, model.YHt[:,7]())
-"""
-print('TIC', (0.1295 * IC_B * model.XB() + 0.0802*IC_T * model.XT() + 0.065*model.XP() * IC_P
-                         + 0.1295 * IC_W * model.XW() * W_size / module_size) * module_size**0.9
-                         + (0.065+0.01)  * (model.XHs() * IC_Hs + model.XHk() * IC_Hk) * tank_size + 0.065 * model.XS() * IC_S,
-      'O&M',0.01 * model.XB() * module_size  +IC_T * model.XT() * 0.024 * module_size + IC_W * model.XW() * 0.02 * W_size + 0.01*model.XP() * IC_P* module_size)
-H_total = 0
-
-for i in range(sc_numb):
-    for j in range(52+LT):
-        H_total = H_total + H_demand[j, i] / sc_numb
-print('H_total', H_total, 'LCOH', model.obj()/H_total*1000)
-print('NT', model.XT(), 'NP', model.XP(), 'NW', model.XW(), 'NB', model.XB(), 'NS', model.XS(), 'NHk', model.XHk(), 'NHs', model.XHs())
-"""
-
-a1 = NT.flatten().tolist()
-a2 = NP.flatten().tolist()
-a3 = NB.flatten().tolist()
-#a4 = NB2.flatten().tolist()
-a5 = NW.flatten().tolist()
-a6 = NFC.flatten().tolist()
-a7 = NDAC.flatten().tolist()
-a8 = NHP.flatten().tolist()
-a9 = NTES.flatten().tolist()
-a10 = NHT.flatten().tolist()
-a11 = NC.flatten().tolist()
-a12 = curtail.flatten().tolist()
-#a13 = NNGCC.flatten().tolist()
-a14 = A14.flatten().tolist()
-a15 = A15.flatten().tolist()
-a16 = A16.flatten().tolist()
-data_array = np.array([a1, a2, a3,a5, a6, a7, a8, a9, a10, a11, a12, a14, a15, a16])
-
-# Convert the NumPy array to a Pandas DataFrame
-df = pd.DataFrame({
-    'Turbine': a1,
-    'PV': a2,
-    'Battery': a3,
-    #'Battery 2': a4,
-    'W': a5,
-    'FC': a6,
-    'DAC': a7,
-    'HP': a8,
-    'TES': a9,
-    'HT': a10,
-    #'NGCC': a13,
-    'Cost': a11,
-    'curtail': a12,
-    #'low C ratio': a14,
-    #'NG': a15,
-    #'Alkaline': a16
-})
-
-# first computer
-# df.to_excel(r'C:\Users\User\Desktop\data\design.xlsx', index=False, engine='openpyxl')
-# second computer
-# df.to_excel(r'C:\Users\coms\Desktop\data\design.xlsx', index=False, engine='openpyxl')
-# usc computer
-df.to_excel(r'C:\Users\glory\OneDrive\바탕화~1-LAPTOP-Q1E1LOI1-34370666\data\design.xlsx', index=False, engine='openpyxl')
-# usc second computer
-# df.to_excel(r'C:\Users\glory\Desktop\data\design.xlsx', index=False, engine='openpyxl')
+   
