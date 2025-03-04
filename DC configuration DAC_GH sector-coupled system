@@ -1,1 +1,707 @@
-This will be uploaded after acceptance.
+import pyomo.environ as pe
+import pandas as pd
+import numpy as np
+import random as rand
+import matplotlib.pyplot as pt
+
+sc_numb = 3
+# 2030 total H demand
+# Year_Demand=1.94*1000000
+# 2040 total H demand
+# Year_Demand=5.26*1000000
+# 2030 blue + green H demand
+# Year_Demand=0.85*1000000
+# 2040 blue + green H demand
+# Year_Demand=3.48*1000000
+Year_Demand = 10000 * 1
+# CO2_total=1000000*sc_numb*1
+H_const = True
+P = True
+min_HP = 0.4
+DAC_discount = 417/237 * 1.0
+e_factor = 250/210
+h_factor = 1072/1286
+# First com Export
+# Renewable_Source =pd.read_excel(r"C:\Users\User\Desktop\세번째 논문 H SCM\CF_Ws_Near_Neom_total.xlsx" )
+# Renewable_Source =pd.read_excel(r"C:\Users\User\Desktop\세번째 논문 H SCM\CF_Ws_Near_Aust.xlsx" )
+# Renewable_Source =pd.read_excel(r"C:\Users\User\Desktop\세번째 논문 H SCM\CF_Ws_Near_Chile.xlsx" )
+
+# First com Import
+# Demand_Source =pd.read_csv(r"C:\Users\User\Desktop\세번째 논문 H SCM\Korea_demand_G.csv" )
+# Demand_Source =pd.read_csv(r"C:\Users\User\Desktop\세번째 논문 H SCM\Europe_demand_G.csv" )
+# Demand_Source =pd.read_csv(r"C:\Users\User\Desktop\세번째 논문 H SCM\USA_demand_G.csv" )
+
+# Second com Export
+#Renewable_Source = pd.read_excel(r"\Users\coms\Desktop\data\CF_Ws_Near_Neom_total.xlsx", engine='openpyxl')
+# Renewable_Source = pd.read_excel(r"C:\Users\coms\Desktop\data\CF_Ws_Near_Aust.xlsx" ,engine='openpyxl')
+# Renewable_Source = pd.read_excel(r"C:\Users\coms\Desktop\data\CF_Ws_Near_Chile.xlsx" ,engine='openpyxl')
+
+# Second com Import
+# Demand_Source= pd.read_csv(r"\Users\coms\Desktop\data\Korea_demand_G.csv" )
+#Demand_Source = pd.read_csv(r"C:\Users\coms\Desktop\data\Europe_demand_G.csv")
+# Demand_Source = pd.read_csv(r"C:\Users\coms\Desktop\data\USA_demand_G.csv" )
+
+
+# Third com Export
+# Renewable_Source = pd.read_excel(r"C:\Users\User\Desktop\data\CF_Ws_Near_Neom_total.xlsx", engine='openpyxl')
+# Renewable_Source = pd.read_excel(r"C:\Users\User\Desktop\data\CF_Ws_Near_Aust.xlsx" ,engine='openpyxl')
+# Renewable_Source = pd.read_excel(r"C:\Users\User\Desktop\data\CF_Ws_Near_Chile.xlsx" ,engine='openpyxl')
+
+# Third com Import
+# Demand_Source = pd.read_csv(r"C:\Users\User\Desktop\data\Korea_demand_G.csv" )
+# Demand_Source = pd.read_csv(r"C:\Users\User\Desktop\data\Europe_demand_G.csv" )
+# Demand_Source = pd.read_csv(r"C:\Users\User\Desktop\data\USA_demand_G.csv")
+
+# USA com Export
+#Renewable_Source = pd.read_excel(r"C:\Users\glory\OneDrive\바탕화~1-LAPTOP-Q1E1LOI1-34370666\data\CF_Ws_Near_Neom_total.xlsx", engine='openpyxl')
+#Renewable_Source = pd.read_excel(r"C:\Users\glory\OneDrive\바탕화~1-LAPTOP-Q1E1LOI1-34370666\data\CF_Ws_Near_Aust.xlsx" ,engine='openpyxl')
+Renewable_Source = pd.read_excel(r"C:\Users\glory\OneDrive\바탕화~1-LAPTOP-Q1E1LOI1-34370666\data\CF_Ws_Near_Chile.xlsx" ,engine='openpyxl')
+
+# USA com Import
+# Demand_Source = pd.read_csv(r"C:\Users\glory\OneDrive\바탕화~1-LAPTOP-Q1E1LOI1-34370666\data\Korea_demand_G.csv" )
+# Demand_Source = pd.read_csv(r"C:\Users\glory\OneDrive\바탕화~1-LAPTOP-Q1E1LOI1-34370666\data\Europe_demand_G.csv" )
+# Demand_Source = pd.read_csv(r"C:\Users\glory\OneDrive\바탕화~1-LAPTOP-Q1E1LOI1-34370666\data\USA_demand_G.csv")
+
+# USA second com Export
+Renewable_Source = pd.read_excel(r"C:\Users\glory\Desktop\data\CF_Ws_Near_Neom_total.xlsx", engine='openpyxl')
+#Renewable_Source = pd.read_excel(r"C:\Users\glory\Desktop\data\CF_Ws_Near_Aust.xlsx" ,engine='openpyxl')
+#Renewable_Source = pd.read_excel(r"C:\Users\glory\Desktop\data\CF_Ws_Near_Chile.xlsx" ,engine='openpyxl')
+
+# USA second com Import
+Demand_Source = pd.read_csv(r"C:\Users\glory\Desktop\data\Korea_demand_G.csv" )
+#Demand_Source = pd.read_csv(r"C:\Users\glory\Desktop\data\Europe_demand_G.csv" )
+#Demand_Source = pd.read_csv(r"C:\Users\glory\Desktop\data\USA_demand_G.csv")
+
+
+RS = pd.DataFrame(Renewable_Source)
+Solar_CF = RS['CF']
+Ws = RS['Ws']
+Wind_CF = np.zeros(8760 * 3)
+for i in range(8760 * 3):
+    ws = Ws[i]
+    cf = 0
+    if ws < 3:
+        cf = 0
+    elif ws > 25:
+        cf = 0
+    elif 3 <= ws <= 11.4:
+        cf = 6.578 * 1e-4 * ws ** 3 - 0.0185706
+    else:
+        cf = 1
+    Wind_CF[i] = cf
+
+WF = np.zeros((8760, sc_numb))
+SF = np.zeros((8760, sc_numb))
+
+for i in range(sc_numb):
+    coin_1 = i
+    coin_2 = coin_1
+    # coin_1=i
+    # coin_2=2-i
+    for j in range(8760):
+        WF[j][i] = Wind_CF[coin_1 * 8760 + j]
+        SF[j][i] = Solar_CF[coin_2 * 8760 + j]
+
+"""
+for i in range(sc_numb):
+    coin_1=rand.sample([0,1,2],1)[0]
+    coin_2=rand.sample([0,1,2],1)[0]
+    #coin_1=i
+    #coin_2=2-i
+    for j in range(8760):
+        WF[j][i]=Wind_CF[coin_1*8760+j]
+        SF[j][i]=Solar_CF[coin_2*8760+j]
+H_demand=np.zeros((52+LT,sc_numb))
+
+for i in range(sc_numb):
+    for j in range(8760):
+        WF[j][i]=Wind_CF.mean()
+        SF[j][i]=Solar_CF.mean()
+
+"""
+
+H_demand = np.zeros((8760, sc_numb))
+#HD = pd.DataFrame(Demand_Source)
+if H_const == True:
+    for i in range(sc_numb):
+        for j in range(8760):
+            H_demand[j, i] = Year_Demand / 8760
+
+"""
+#H_demand constant
+HD = pd.DataFrame(Demand_Source)
+H_demand = np.zeros((52 , sc_numb))
+for i in range(sc_numb):
+    for j in range(52):
+        H_demand[j, i] = Year_Demand/52
+
+#H_demand seasonality
+HD = pd.DataFrame(Demand_Source)
+H_demand = np.zeros((52 , sc_numb))
+for i in range(sc_numb):
+    for j in range(52):
+        H_demand[j, i] = HD.at[j, f'{i}']
+
+
+H_total1 = np.zeros(sc_numb)
+for i in range(sc_numb):
+    for j in range(52 ):
+        H_total1[i] = H_total1[i] + H_demand[j, i]
+for i in range(sc_numb):
+    for j in range(52 ):
+        H_demand[j, i] = H_demand[j, i] * Year_Demand / H_total1[i] * 364 / 365
+"""
+
+"""
+Average_demand=[0.0942 ,0.0858,	0.0843,	0.0747,	0.0772,	0.0806,	0.0861,	0.0861,	0.0783,	0.0792,	0.0824,	0.0912]
+STDEV_demand=[0.00260,0.00361,	0.00113,0.00402,0.00322,0.00210,0.00063,0.00112,0.00074,0.00131,0.00086,0.00222]
+for i in range(sc_numb):
+    for j in range(4):
+        for k in range(3):
+            if k==2:
+                for m in range(5):
+                    coin = float(np.random.normal(0, 1, 1))
+                    if coin>5:
+                        coin=5
+                    elif coin<-5:
+                        coin=-5
+                    else:
+                        coin=coin
+                    H_demand[j*13+8+m][i] = (Average_demand[k + 3 * j] / 4.333 + coin * STDEV_demand[k + 3 * j]/2.07)*Year_Demand
+            elif k==1:
+                for m in range(4):
+                    coin = float(np.random.normal(0, 1, 1))
+                    if coin > 5:
+                        coin = 5
+                    elif coin < -5:
+                        coin = -5
+                    else:
+                        coin = coin
+                    H_demand[j * 13 + 4 + m][ i] = (Average_demand[k + 3 * j] / 4.333 + coin * STDEV_demand[k + 3 * j]/2.07)*Year_Demand
+            else:
+                for m in range(4):
+                    coin = float(np.random.normal(0, 1, 1))
+                    if coin > 5:
+                        coin = 5
+                    elif coin < -5:
+                        coin = -5
+                    else:
+                        coin = coin
+                    H_demand[j * 13 + m][ i] = (Average_demand[k + 3 * j] / 4.333 + coin * STDEV_demand[k + 3 * j]/2.07)*Year_Demand
+H_total1=0
+for i in range(sc_numb):
+    for j in range(52+LT):
+        H_total1 = H_total1 + H_demand[j, i] / sc_numb
+for i in range(sc_numb):
+    for j in range(52+LT):
+        H_demand[j, i] = H_demand[j, i] * Year_Demand / H_total1
+#print(H_demand)
+for i in range(LT):
+    H_demand[i+52]=H_demand[i]
+    H_demand[i]=0
+
+for i in range(sc_numb):
+    for j in range(52+LT):
+        H_demand[j, i] = Year_Demand*364/365/52
+#print(H_demand)
+for i in range(LT):
+    H_demand[i+52]=H_demand[i]
+    H_demand[i]=0    
+"""
+
+# print(H_demand)
+# print(WF)
+# print(SF)
+
+Ti = np.arange(8760)
+Wi = np.arange(52)
+Sc = np.arange(sc_numb)
+# Neom
+# num = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 1.0]
+num = [0.1, 0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1]
+number = 8
+NT=np.zeros((number,1))
+NP=np.zeros((number,1))
+NB=np.zeros((number,1))
+NB2=np.zeros((number,1))
+NW=np.zeros((number,1))
+NFC=np.zeros((number,1))
+NDAC=np.zeros((number,1))
+NHP=np.zeros((number,1))
+NTES=np.zeros((number,1))
+NHT=np.zeros((number,1))
+NC=np.zeros((number,1))
+curtail=np.zeros((number,1))
+NNGCC = np.zeros((number,1))
+A14 = np.zeros((number,1))
+A15 = np.zeros((number,1))
+A16 = np.zeros((number,1))
+# Others
+# num=[0.1, 0.2, 0.3, 0.4, 0.5,  0.7, 1.0]
+# Tl1=[25,28,30,33,37,40,43,54]
+# Tl2=[25,28,31,34,38,41,44,55]
+for k in range(number):
+    CO2_total = 1000000 * num[k]
+    model = pe.ConcreteModel()
+    # model.XB = pe.Var(within=pe.NonNegativeIntegers, bounds=(1, 200))
+    model.XB = pe.Var(bounds=(0, 1e6))
+    # Battery
+    # model.XT = pe.Var(within=pe.NonNegativeIntegers, bounds=(Tl1[k], Tl2[k]))
+    model.XT = pe.Var(bounds=(0, 1e4))
+    T_module = 5
+    # Turbine
+    # model.XP = pe.Var(within=pe.NonNegativeIntegers, bounds=(1, 100))
+    model.XP = pe.Var(bounds=(0, 1e6))
+    # Solar
+    # model.XW = pe.Var(within=pe.NonNegativeIntegers, bounds=(1, 100))
+
+    # model.XHe = pe.Var(within=pe.NonNegativeIntegers, bounds=(0, 100))
+    # model.XAe = pe.Var(within=pe.NonNegativeIntegers, bounds=(1, 100))
+    # model.XAi = pe.Var(within=pe.NonNegativeIntegers, bounds=(1, 100))
+    model.XW = pe.Var(bounds=(0, 1e6))
+    model.XFC = pe.Var(bounds=(0, 1e6))
+    model.XHt = pe.Var(bounds=(0, 1e6))
+    model.XDAC = pe.Var(bounds=(0, 1e6))
+    model.XHP = pe.Var(bounds=(0, 1e6))
+    model.XTES = pe.Var(bounds=(0, 1e6))
+    model.NGCC= pe.Var(Ti,Sc, bounds=(0, 0))
+    model.XNGCC = pe.Var(bounds=(0, 0))
+
+    """
+    #only DAC
+    model.XW = pe.Var(bounds=(0,0))
+    model.XFC = pe.Var(bounds=(0,0))
+    model.XHt = pe.Var(bounds=(0, 0))
+    model.XDAC=pe.Var(bounds=(0, 1e10))
+    model.XHP=pe.Var(bounds=(0, 1e10))
+    model.XTES=pe.Var(bounds=(0, 1e10))
+
+    #synerrgy of DAC
+    model.XW = pe.Var(bounds=(0,1e4))
+    model.XFC = pe.Var(bounds=(0,1e4))
+    model.XHt = pe.Var(bounds=(0, 1e4))
+    model.XDAC=pe.Var(bounds=(0, 1e10))
+    model.XHP=pe.Var(bounds=(0, 1e10))
+    model.XTES=pe.Var(bounds=(0, 1e10))
+
+    #only hydrogen
+    model.XW = pe.Var(bounds=(0,1e4))
+    model.XFC = pe.Var(bounds=(0,1e4))
+    model.XHt = pe.Var(bounds=(0, 1e4))
+    model.XDAC=pe.Var(bounds=(0,0))
+    model.XHP=pe.Var(bounds=(0, 0))
+    model.XTES=pe.Var(bounds=(0, 0))
+    """
+
+    # PEM water electrolyzer
+    # model.XL = pe.Var(within=pe.NonNegativeIntegers ,bounds=(0,10000))
+    # liquifaction H
+    module_size = 1
+    W_size = 1
+
+    IC_T = 0.95
+    IC_P = 0.6
+    IC_B = 0.161
+    if P == True:
+        IC_W = 0.44
+        min_W = 0.05
+    else:
+        IC_W = 0.33
+        min_W = 0.2
+    IC_Ht = 0.25
+
+    IC_DAC = 315.2062 * 8760 / 1e6 * DAC_discount
+
+    # IC_HP= 2.5125562
+    IC_HP = 0.216076
+    HP_eff = 3.41 * 0.95
+    IC_TES = 0.022
+    TES_eff = 0.98
+
+    IC_FC = 0.96
+    FC_eff = 1/20.4
+
+    B_eff = 0.95 * 0.98
+    T_eff = 0.95
+    P_eff = 0.98
+    W_eff = 1 / 48
+
+    model.ESS = pe.Var(Ti, Sc, bounds=(0, None))
+    model.ch = pe.Var(Ti, Sc, bounds=(0, None))
+    model.dch = pe.Var(Ti, Sc, bounds=(0, None))
+
+    model.YHt = pe.Var(Ti, Sc, bounds=(0, None))
+    # model.Hch = pe.Var(Ti, Sc, bounds=(0, None))
+    # model.Hdch = pe.Var(Ti, Sc, bounds=(0, None))
+
+    model.YTES = pe.Var(Ti, Sc, bounds=(0, None))
+    # model.YHP = pe.Var(Ti, Sc,within=pe.Binary)
+    model.Tch = pe.Var(Ti, Sc, bounds=(0, None))
+    model.Tdch = pe.Var(Ti, Sc, bounds=(0, None))
+
+    model.out = pe.Var(Ti, Sc, bounds=(0, None))
+    model.p2x = pe.Var(Ti, Sc, bounds=(0, None))
+    model.x2p = pe.Var(Ti, Sc, bounds=(0, None))
+
+    model.dac1 = pe.Var(Ti, Sc, bounds=(0, None))
+    e1 = 0.07 * 2 * e_factor
+    model.dac2 = pe.Var(Ti, Sc, bounds=(0, None))
+    model.dac3 = pe.Var(Ti, Sc, bounds=(0, None))
+    e3 = 0.14 * 2* e_factor
+    h3 = 1.286 * 2* h_factor
+    model.dac4 = pe.Var(Ti, Sc, bounds=(0, None))
+
+    model.p2t = pe.Var(Ti, Sc, bounds=(0, None))
+
+    # def obj_rule(model):
+    #    return sum(model.out[i]+1000*(model.sup[i]-model.dem[i]) for i in model.t)
+    model.obj = pe.Objective(expr=(
+            (0.025 + 0.12950) * model.XB * IC_B +
+            (0.024 + 0.06505) * IC_T * model.XT * T_module +
+            (0.02 + 0.1295) * IC_W * model.XW +
+            (0.02 + 0.06107) * model.XP * IC_P +
+            (0.07095 + 0.01) * model.XHt * IC_Ht +
+            (0.23097 + 0.02) * model.XFC * IC_FC +
+            (0.04 + 0.06505) * model.XDAC * IC_DAC +
+            (0.0036 + 0.07095) * model.XHP * IC_HP +
+            (0.0002 + 0.06505) * model.XTES * IC_TES)
+        , sense=pe.minimize)
+
+
+    # (sum (0.05 * model.buy[i,sc] for i in Ti for sc in Sc)
+    # Energy balance
+
+    def con_rule_FC(model, t, sc):
+        return model.x2p[t, sc] <= model.XFC
+
+
+    model.con_FC = pe.Constraint(Ti, Sc, rule=con_rule_FC)
+
+
+    def con_rule_DAC(model, t, sc):
+        return model.XDAC == model.dac1[t, sc] + model.dac2[t, sc] + model.dac3[t, sc] + model.dac4[t, sc]
+
+
+    model.con_rule_DAC = pe.Constraint(Ti, Sc, rule=con_rule_DAC)
+
+
+    def con_rule_DAC1(model, t, sc):
+        if t == 8759:
+            return pe.Constraint.Skip
+            # return 1000*model.Nb*model.SOC[t+1] == 1000*model.Nb*model.SOC[t]+0.9*model.ch[t] - model.dch[t]/0.9
+        else:
+            return model.dac1[t + 1, sc] <= model.dac3[t, sc] + model.dac4[t, sc]
+
+
+    model.con_rule_DAC1 = pe.Constraint(Ti, Sc, rule=con_rule_DAC1)
+
+
+    def con_rule_DAC2(model, t, sc):
+        if t == 8759:
+            return pe.Constraint.Skip
+            # return 1000*model.Nb*model.SOC[t+1] == 1000*model.Nb*model.SOC[t]+0.9*model.ch[t] - model.dch[t]/0.9
+        else:
+            return model.dac3[t + 1, sc] <= model.dac1[t, sc] + model.dac2[t, sc]
+
+
+    model.con_rule_DAC2 = pe.Constraint(Ti, Sc, rule=con_rule_DAC2)
+
+
+    def con_rule_DAC3(model, t, sc):
+        if t == 8759:
+            return pe.Constraint.Skip
+            # return 1000*model.Nb*model.SOC[t+1] == 1000*model.Nb*model.SOC[t]+0.9*model.ch[t] - model.dch[t]/0.9
+        else:
+            return model.dac2[t + 1, sc] == model.dac1[t, sc] + model.dac2[t, sc] - model.dac3[t + 1, sc]
+
+
+    model.con_rule_DAC3 = pe.Constraint(Ti, Sc, rule=con_rule_DAC3)
+
+
+    def con_rule_DAC4(model, t, sc):
+        if t == 8759:
+            return pe.Constraint.Skip
+            # return 1000*model.Nb*model.SOC[t+1] == 1000*model.Nb*model.SOC[t]+0.9*model.ch[t] - model.dch[t]/0.9
+        else:
+            return model.dac4[t + 1, sc] == model.dac3[t, sc] + model.dac4[t, sc] - model.dac1[t + 1, sc]
+
+
+    model.con_rule_DAC4 = pe.Constraint(Ti, Sc, rule=con_rule_DAC4)
+
+
+    def con1_rule(model, t, sc):
+        return WF[t][sc] * model.XT * T_eff * T_module + SF[t][sc] * model.XP * P_eff + model.dch[t, sc] - model.ch[
+            t, sc] - model.out[t, sc] - model.p2x[t, sc] - (model.dac1[t, sc] * e1 + model.dac3[t, sc] * e3) - \
+            model.p2t[t, sc] + 0.98 * model.x2p[t, sc] == 0
+        # return (WF[t][sc]*model.XT*T_eff + SF[t][sc]*model.XP*P_eff)*module_size + model.dch[t,sc] - model.ch[t,sc] - model.out[t,sc] - model.p2x[t,sc] + model.buy[t,sc]==0
+
+
+    model.con1 = pe.Constraint(Ti, Sc, rule=con1_rule)
+    # model.con1=Constraint(expr = model.power[i]*model.Nt+model.dch[i]-model.ch[i]-model.out[i]-model.sup[i]==0 for i in model.t)
+
+    # End effect of battery, Hs tank, Hk tank considering lead time
+    model.end_effect = pe.ConstraintList()
+
+    for sc in Sc:
+        model.end_effect.add(
+            expr=0.999917 * model.ESS[8759, sc] + B_eff * model.ch[8759, sc] - model.dch[8759, sc] / B_eff >= model.ESS[
+                0, sc])
+        model.end_effect.add(
+            expr=0.999896 * model.YHt[8759, sc] + W_eff * model.p2x[8759, sc] - 1 / FC_eff * model.x2p[8759, sc] >=
+                 model.YHt[0, sc])
+        model.end_effect.add(
+            expr=0.995 * model.YTES[8759, sc] + TES_eff * model.Tch[8759, sc] - model.Tdch[8759, sc] / TES_eff >=
+                 model.YTES[
+                     0, sc])
+        model.end_effect.add(
+            expr=model.dac3[0, sc] <= model.dac1[8759, sc] + model.dac2[8759, sc])
+        model.end_effect.add(
+            expr=model.dac1[0, sc] <= model.dac3[8759, sc] + model.dac4[8759, sc])
+        model.end_effect.add(
+            expr=model.dac2[0, sc] == model.dac1[8759, sc] + model.dac2[8759, sc] - model.dac3[0, sc])
+        model.end_effect.add(
+            expr=model.dac4[0, sc] == model.dac4[8759, sc] + model.dac3[8759, sc] - model.dac1[0, sc])
+
+
+    # Component balance equation (ESS, Hs tank, Hk tank) considering lead time
+    def con_rule(model, t, sc):
+        if t == 8759:
+            return pe.Constraint.Skip
+            # return 1000*model.Nb*model.SOC[t+1] == 1000*model.Nb*model.SOC[t]+0.9*model.ch[t] - model.dch[t]/0.9
+        else:
+            return model.ESS[t + 1, sc] == 0.999917 * model.ESS[t, sc] + B_eff * model.ch[t, sc] - model.dch[
+                t, sc] / B_eff
+
+
+    model.con3 = pe.Constraint(Ti, Sc, rule=con_rule)
+
+
+    def con_rule_He(model, t, sc):
+        if t == 8759:
+            return pe.Constraint.Skip
+        else:
+            return model.YHt[t + 1, sc] == 0.999896 * model.YHt[t, sc] + model.p2x[t, sc] * W_eff - 1 / FC_eff * \
+                model.x2p[t, sc] - H_demand[t, sc]
+
+
+    model.con_He = pe.Constraint(Ti, Sc, rule=con_rule_He)
+
+
+    def con_rule_Te(model, t, sc):
+        if t == 8759:
+            return pe.Constraint.Skip
+            # return 1000*model.Nb*model.SOC[t+1] == 1000*model.Nb*model.SOC[t]+0.9*model.ch[t] - model.dch[t]/0.9
+        else:
+            return model.YTES[t + 1, sc] == 0.995 * model.YTES[t, sc] + TES_eff * model.Tch[t, sc] - model.Tdch[
+                t, sc] / TES_eff
+
+
+    model.con_Te = pe.Constraint(Ti, Sc, rule=con_rule_Te)
+
+
+    def con_rule_aHB(model, t, sc):
+        return model.dac3[t, sc] * h3 == model.p2t[t, sc] * HP_eff - model.Tch[t, sc] + model.Tdch[t, sc]
+
+
+    model.con3aH = pe.Constraint(Ti, Sc, rule=con_rule_aHB)
+
+
+    # operating boundary constraint
+    def con7_rule(model, t, sc):
+        # return model.dch[t] <= model.Nb*500
+        return model.dch[t, sc] <= 0.125 * model.XB
+
+
+    model.con7 = pe.Constraint(Ti, Sc, rule=con7_rule)
+
+
+    def con8_rule(model, t, sc):
+        # return model.ch[t] <= model.Nb*500
+        return model.ch[t, sc] <= 0.125 * model.XB
+
+
+    model.con8 = pe.Constraint(Ti, Sc, rule=con8_rule)
+
+
+    def con9_rule(model, t, sc):
+        return model.p2x[t, sc] <= model.XW
+
+
+    model.con9 = pe.Constraint(Ti, Sc, rule=con9_rule)
+
+
+    def con10_rule(model, t, sc):
+        return min_W * model.XW <= model.p2x[t, sc]
+
+
+    model.con10 = pe.Constraint(Ti, Sc, rule=con10_rule)
+
+
+    def con11_rule(model, t, sc):
+        return model.ESS[t, sc] <= model.XB * 0.95
+
+
+    def con12_rule(model, t, sc):
+        return model.XB * 0.15 <= model.ESS[t, sc]
+
+
+    model.con11 = pe.Constraint(Ti, Sc, rule=con11_rule)
+    model.con12 = pe.Constraint(Ti, Sc, rule=con12_rule)
+
+
+    # def con31_rule(model, t, sc):
+    # return model.Hdch[t, sc] <= model.XHt
+
+    # model.con31 = pe.Constraint(Ti, Sc, rule=con31_rule)
+
+    def con41_rule(model, t, sc):
+        return model.Tdch[t, sc] <= model.XTES * 0.4
+
+
+    model.con41 = pe.Constraint(Ti, Sc, rule=con41_rule)
+    """
+    def con32_rule(model, t, sc):
+        return model.Hch[t, sc] <= model.XHt
+    model.con32 = pe.Constraint(Ti, Sc, rule=con32_rule)
+    def con36_rule(model, t, sc):
+        return model.Hch[t, sc] <= model.p2x[t,sc]*W_eff
+
+    model.con36 = pe.Constraint(Ti, Sc, rule=con36_rule)
+    """
+
+
+    def con42_rule(model, t, sc):
+        return model.Tch[t, sc] <= model.XTES * 0.4
+
+
+    model.con42 = pe.Constraint(Ti, Sc, rule=con42_rule)
+
+
+    def con33_rule(model, t, sc):
+        return model.YHt[t, sc] <= model.XHt
+
+
+    model.con33 = pe.Constraint(Ti, Sc, rule=con33_rule)
+
+
+    def con43_rule(model, t, sc):
+        return model.YTES[t, sc] <= model.XTES * 0.8
+
+
+    model.con43 = pe.Constraint(Ti, Sc, rule=con43_rule)
+    """
+    def con51_rule(model, t, sc):
+        return model.p2c[t, sc] <= model.XDAC
+
+
+    model.con51 = pe.Constraint(Ti, Sc, rule=con51_rule)
+    """
+
+
+    def con52_rule(model, t, sc):
+        return model.p2t[t, sc] <= model.XHP
+
+
+    model.con52 = pe.Constraint(Ti, Sc, rule=con52_rule)
+
+
+    def con53_rule(model, t, sc):
+        return model.XHP * min_HP <= model.p2t[t, sc]
+
+
+    model.con53 = pe.Constraint(Ti, Sc, rule=con53_rule)
+
+
+    def con61_rule(model, sc):
+        return sum(model.dac3[t, sc] * 2 * 0.95 - model.NGCC[t, sc] * 0.038 for t in Ti) >= CO2_total
+
+
+    model.con61 = pe.Constraint(Sc, rule=con61_rule)
+
+    # First com
+    # solver = pe.SolverFactory('cplex', executetable=r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\CPLEX Optimization Studio 22.1.0\CP Optimizer Interactive.exe')
+    # Second com
+    solver = pe.SolverFactory('cplex',executetable=r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\CPLEX Optimization Studio 22.1.1\CP Optimizer Interactive.exe')
+
+    # Third com
+    # solver = pe.SolverFactory('cplex',  executetable=r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\CPLEX Optimization Studio Community Edition 22.1.1\CP Optimizer Interactive.exe')
+
+    # USA com
+    # solver = pe.SolverFactory('cplex',executetable=r'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\CPLEX Optimization Studio 22.1.1\CP Optimizer Interactive.exe')
+
+    solver.options['mipgap'] = 0.0001
+    solver.options['timelimit'] = 3600 * 6
+    result = solver.solve(model, tee=False)
+    print('number', num[k], 'total cost', model.obj())
+    NT[k] = model.XT() * T_module
+    NP[k] = model.XP()
+    NB[k] = model.XB()
+    NW[k] = model.XW()
+    NFC[k] = model.XFC()
+    NDAC[k] = model.XDAC() * 8760 / 1000000
+    NHP[k] = model.XHP() * 3.41
+    NTES[k] = model.XTES()
+    NHT[k] = model.XHt() / 1000
+    NC[k] = model.obj()
+    curtail[k] = sum(model.out[t, sc]() for t in Ti for sc in Sc) / sum(
+        WF[t][sc] * model.XT() * T_eff * T_module + SF[t][sc] * model.XP() * P_eff for sc in Sc for t in Ti)
+
+
+
+
+# pt.subplots((2,2),Wi, model.YHt[:,7]())
+"""
+print('TIC', (0.1295 * IC_B * model.XB() + 0.0802*IC_T * model.XT() + 0.065*model.XP() * IC_P
+                         + 0.1295 * IC_W * model.XW() * W_size / module_size) * module_size**0.9
+                         + (0.065+0.01)  * (model.XHs() * IC_Hs + model.XHk() * IC_Hk) * tank_size + 0.065 * model.XS() * IC_S,
+      'O&M',0.01 * model.XB() * module_size  +IC_T * model.XT() * 0.024 * module_size + IC_W * model.XW() * 0.02 * W_size + 0.01*model.XP() * IC_P* module_size)
+H_total = 0
+
+for i in range(sc_numb):
+    for j in range(52+LT):
+        H_total = H_total + H_demand[j, i] / sc_numb
+print('H_total', H_total, 'LCOH', model.obj()/H_total*1000)
+print('NT', model.XT(), 'NP', model.XP(), 'NW', model.XW(), 'NB', model.XB(), 'NS', model.XS(), 'NHk', model.XHk(), 'NHs', model.XHs())
+"""
+
+a1 = NT.flatten().tolist()
+a2 = NP.flatten().tolist()
+a3 = NB.flatten().tolist()
+a5 = NW.flatten().tolist()
+a6 = NFC.flatten().tolist()
+a7 = NDAC.flatten().tolist()
+a8 = NHP.flatten().tolist()
+a9 = NTES.flatten().tolist()
+a10 = NHT.flatten().tolist()
+a11 = NC.flatten().tolist()
+a12 = curtail.flatten().tolist()
+#a13 = NNGCC.flatten().tolist()
+#a14 = A14.flatten().tolist()
+#a15 = A15.flatten().tolist()
+#a16 = A16.flatten().tolist()
+data_array = np.array([a1, a2, a3,a5, a6, a7, a8, a9, a10, a11, a12, ])
+
+# Convert the NumPy array to a Pandas DataFrame
+df = pd.DataFrame({
+    'Turbine': a1,
+    'PV': a2,
+    'Battery': a3,
+    'W': a5,
+    'FC': a6,
+    'DAC': a7,
+    'HP': a8,
+    'TES': a9,
+    'HT': a10,
+    'Cost': a11,
+    'curtail': a12
+})
+
+# first computer
+# df.to_excel(r'C:\Users\User\Desktop\data\design.xlsx', index=False, engine='openpyxl')
+# second computer
+# df.to_excel(r'C:\Users\coms\Desktop\data\design.xlsx', index=False, engine='openpyxl')
+# usc computer
+df.to_excel(r'C:\Users\glory\OneDrive\바탕화~1-LAPTOP-Q1E1LOI1-34370666\data\design.xlsx', index=False, engine='openpyxl')
+# usc second computer
+# df.to_excel(r'C:\Users\glory\Desktop\data\design.xlsx', index=False, engine='openpyxl')
+
